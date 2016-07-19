@@ -1,6 +1,9 @@
 require "kemal"
+require "pg"
+require "./app/message"
 
-messages = [] of String
+conn = PG.connect "postgres://user:password@localhost:5432/chat_db"
+
 sockets = [] of HTTP::WebSocket
 
 public_folder "src/assets"
@@ -12,11 +15,17 @@ end
 ws "/" do |socket|
   sockets.push socket
 
+  # Dispatch list of messages to the current socket
+  socket.send Message.all(conn).to_json
+
   # Handle incoming message and dispatch it to all connected clients
   socket.on_message do |message|
-    messages.push message
+    # Insert message into the Database
+    Message.from_json(message).insert(conn)
+
+    # Dispatch list of messages to all connected clients
     sockets.each do |a_socket|
-      a_socket.send messages.to_json
+      a_socket.send Message.all(conn).to_json
     end
   end
 

@@ -2,20 +2,6 @@ function random(min, max) {
   return Math.floor(Math.random()*(max-min+1)+min);
 }
 
-function setCurrentTime() {
-  var currentTime = new Date()
-  var hours       = currentTime.getHours()
-  var minutes     = currentTime.getMinutes()
-
-  if (minutes < 10) {
-    minutes = "0" + minutes
-  }
-
-  var timePeriod = hours > 11 ? "PM" : "AM"
-
-  return hours+":"+minutes + " " + timePeriod
-}
-
 var Chat = React.createClass({
 
   getInitialState: function () {
@@ -36,15 +22,21 @@ var Chat = React.createClass({
       self.setState({messages: messages});
       window.scrollTo(0, document.body.scrollHeight);
       self.refs.message.focus();
-      new Beep(random(18000, 22050)).play(messages[messages.length - 1].split(":")[0].split('@')[2], 0.05, [Beep.utils.amplify(8000)]);
+      new Beep(random(18000, 22050)).play(messages[messages.length - 1].username.split('@')[2], 0.05, [Beep.utils.amplify(8000)]);
     };
 
     server.onopen = function () {
-      server.send(user + ": joined the room.");
+      var payload = 
+        JSON.stringify({username: user, message: "joined the room."});
+
+      server.send(payload);
     };
 
     server.onclose = function () {
-      server.send(user + ": left the room.");
+      var payload = 
+        JSON.stringify({username: user, message: "left the room."});
+
+      server.send(payload);
     };
 
     this.server = server;
@@ -60,7 +52,11 @@ var Chat = React.createClass({
     setTimeout(function () {
       self.sendable = true; 
     }, 100);
-    this.server.send(this.user + ":" + this.refs.message.value);
+
+    var payload = 
+      JSON.stringify({username: this.user, message: this.refs.message.value});
+
+    this.server.send(payload);
     this.refs.message.value = '';
     this.sendable = false;
   },
@@ -73,13 +69,12 @@ var Chat = React.createClass({
 
   render: function () {
     var messages = this.state.messages.map(function (message) {
-      var parts = message.split(":");
-      var user = parts[0].split("@");
+      var user = message.username.split("@");
       var color = user[1];
       var name = user[0];
       return React.createElement("li", null,
-        React.createElement('span', {style: {color: color}}, name+"["+setCurrentTime()+"]: "),
-        React.createElement('span', null, parts.slice(1).join(":").trim())
+        React.createElement('span', {style: {color: color}}, name+"["+ message.created_at+ "]: "),
+        React.createElement('span', null, message.message)
       );
     });
 

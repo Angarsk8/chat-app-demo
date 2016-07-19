@@ -4,8 +4,11 @@ version: 0.1.0
 dependencies:
   kemal:
     github: sdogruyol/kemal
+  pg:
+    github: will/crystal-pg
 
 authors:
   - Fatih Kadir Akın <fakin@protel.com.tr>
+  - Andrés García <andresa.garciah621@gmail.com>
 
 license: MIT
