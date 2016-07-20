@@ -41,5 +41,4 @@ ws "/" do |socket|
   end
 end
 
-Process.run("gulp")
 Kemal.run
