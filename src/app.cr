@@ -2,7 +2,7 @@ require "kemal"
 require "pg"
 require "./app/message"
 
-conn = PG.connect "postgres://user:password@localhost:5432/chat_db"
+conn = PG.connect "postgres://user:password@localhost:5432/db_name"
 
 sockets = [] of HTTP::WebSocket
 
@@ -25,7 +25,12 @@ ws "/" do |socket|
 
     # Dispatch list of messages to all connected clients
     sockets.each do |a_socket|
-      a_socket.send Message.all(conn).to_json
+      begin
+        a_socket.send Message.all(conn).to_json
+      rescue
+        sockets.delete(a_socket)
+        puts "Closing Socket: #{socket}"
+      end
     end
   end
 
@@ -36,4 +41,5 @@ ws "/" do |socket|
   end
 end
 
+Process.run("gulp")
 Kemal.run
